@@ -50,6 +50,7 @@ def corner_impl(
     scale_hist=False,
     quantiles=None,
     title_quantiles=None,
+    quantiles_color=None,
     verbose=False,
     fig=None,
     max_n_ticks=5,
@@ -243,8 +244,10 @@ def corner_impl(
         # Plot quantiles if wanted.
         if len(quantiles) > 0:
             qvalues = quantile(x, quantiles, weights=weights)
+            if quantiles_color is None:
+                quantiles_color = color
             for q in qvalues:
-                ax.axvline(q, ls="dashed", color=color)
+                ax.axvline(q, ls="dashed", color=quantiles_color)
 
             if verbose:
                 print("Quantiles:")

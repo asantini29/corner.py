@@ -6,7 +6,7 @@ import logging
 
 import numpy as np
 
-from corner.core import corner_impl
+from .core import corner_impl
 
 try:
     from corner.arviz_corner import arviz_corner
@@ -37,6 +37,7 @@ def corner(
     truth_color="#4682b4",
     scale_hist=False,
     quantiles=None,
+    quantiles_color='None',
     verbose=False,
     fig=None,
     max_n_ticks=5,
@@ -260,6 +261,7 @@ def corner(
             titles=titles,
             show_titles=show_titles,
             title_quantiles=title_quantiles,
+            quantiles_color=quantiles_color,
             title_fmt=title_fmt,
             title_kwargs=title_kwargs,
             truths=truths,
@@ -298,6 +300,7 @@ def corner(
         truth_color=truth_color,
         scale_hist=scale_hist,
         quantiles=quantiles,
+        quantiles_color=quantiles_color,
         verbose=verbose,
         fig=fig,
         max_n_ticks=max_n_ticks,

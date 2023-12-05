@@ -45,6 +45,7 @@ def corner(
     use_math_text=False,
     reverse=False,
     labelpad=0.0,
+    custom_whspace=0.05,
     hist_kwargs=None,
     # Arviz parameters
     group="posterior",
@@ -275,6 +276,7 @@ def corner(
             use_math_text=use_math_text,
             reverse=reverse,
             labelpad=labelpad,
+            custom_whspace=custom_whspace,
             hist_kwargs=hist_kwargs,
             **hist2d_kwargs,
         )
@@ -308,6 +310,7 @@ def corner(
         use_math_text=use_math_text,
         reverse=reverse,
         labelpad=labelpad,
+        custom_whspace=custom_whspace,
         hist_kwargs=hist_kwargs,
         group=group,
         var_names=var_names,

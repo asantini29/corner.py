@@ -58,6 +58,7 @@ def corner_impl(
     use_math_text=False,
     reverse=False,
     labelpad=0.0,
+    custom_whspace=0.05,
     hist_kwargs=None,
     **hist2d_kwargs,
 ):
@@ -109,7 +110,7 @@ def corner_impl(
     else:
         lbdim = 0.5 * factor  # size of left/bottom margin
         trdim = 0.2 * factor  # size of top/right margin
-    whspace = 0.05  # w/hspace size
+    whspace = custom_whspace  # w/hspace size
     plotdim = factor * K + factor * (K - 1.0) * whspace
     dim = lbdim + plotdim + trdim
 

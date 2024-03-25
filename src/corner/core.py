@@ -22,7 +22,7 @@ from matplotlib.ticker import (
     NullLocator,
     ScalarFormatter,
 )
-
+from scipy.interpolate import interp1d
 try:
     from scipy.ndimage import gaussian_filter
 except ImportError:
@@ -47,8 +47,11 @@ def corner_impl(
     title_kwargs=None,
     truths=None,
     truth_color="#4682b4",
+    marginal_type="hist",
     scale_hist=False,
     quantiles=None,
+    quantiles_type = "fill",
+    plot_median=True,
     title_quantiles=None,
     quantiles_color=None,
     verbose=False,
@@ -216,6 +219,7 @@ def corner_impl(
                 ax = axes[i, i]
 
         # Plot the histograms.
+
         n_bins_1d = int(max(1, np.round(hist_bin_factor[i] * bins[i])))
         if axes_scale[i] == "linear":
             bins_1d = np.linspace(min(range[i]), max(range[i]), n_bins_1d + 1)
@@ -231,24 +235,88 @@ def corner_impl(
                 + str(i)
                 + "not supported. Use 'linear' or 'log'"
             )
-        if smooth1d is None:
-            n, _, _ = ax.hist(x, bins=bins_1d, weights=weights, **hist_kwargs)
-        else:
-            if gaussian_filter is None:
-                raise ImportError("Please install scipy for smoothing")
-            n, _ = np.histogram(x, bins=bins_1d, weights=weights)
-            n = gaussian_filter(n, smooth1d)
-            x0 = np.array(list(zip(bins_1d[:-1], bins_1d[1:]))).flatten()
-            y0 = np.array(list(zip(n, n))).flatten()
-            ax.plot(x0, y0, **hist_kwargs)
-
-        # Plot quantiles if wanted.
+        
         if len(quantiles) > 0:
             qvalues = quantile(x, quantiles, weights=weights)
-            if quantiles_color is None:
-                quantiles_color = color
-            for q in qvalues:
-                ax.axvline(q, ls="dashed", color=quantiles_color)
+            if 0.5 in quantiles:
+                median = quantile(x, 0.5, weights=weights)
+            else:
+                median = None
+        
+        if marginal_type == "hist":
+            if smooth1d is None:
+                n, edges, _ = ax.hist(x, bins=bins_1d, weights=weights, **hist_kwargs)
+            else:
+                if gaussian_filter is None:
+                    raise ImportError("Please install scipy for smoothing")
+                n, edges = np.histogram(x, bins=bins_1d, weights=weights)
+                n = gaussian_filter(n, smooth1d)
+                x0 = np.array(list(zip(bins_1d[:-1], bins_1d[1:]))).flatten()
+                y0 = np.array(list(zip(n, n))).flatten()
+                ax.plot(x0, y0, **hist_kwargs)
+
+            # Plot quantiles if wanted.
+            if len(quantiles) > 0:
+                if quantiles_color is None:
+                    quantiles_color = color
+                if quantiles_type == "lines":
+                    for q in qvalues:
+                        ax.axvline(q, ls="dashed", color=quantiles_color)
+
+                elif quantiles_type == "fill":
+                    edge_center = 0.5 * (edges[:-1] + edges[1:])
+
+                    interp_type = "linear" if smooth1d else "nearest"
+                    interpolator = interp1d(edge_center, n, kind=interp_type)
+
+                    lower_q, upper_q = qvalues.min(), qvalues.max()
+                    x_tmp = np.linspace(lower_q, upper_q, 1000)
+
+                    ax.fill_between(
+                                    x_tmp,
+                                    np.zeros(x_tmp.shape),
+                                    interpolator(x_tmp),
+                                    color=color,
+                                    alpha=0.2,
+                                )
+            
+            if (median is not None) and plot_median:
+                ax.axvline(median, ls="solid", color=quantiles_color)
+
+            
+
+        elif marginal_type == "kde": #similar to ChainConsumer
+            n, edges = np.histogram(x, bins=bins_1d, density=True, weights=weights)
+            edge_center = 0.5 * (edges[:-1] + edges[1:])
+
+            n_, _, _ = ax.hist(
+                edge_center,
+                weights=n,
+                bins=bins_1d,  # type: ignore
+                **hist_kwargs,
+            )
+            
+            fillcolor = hist_kwargs['fc'] if 'fc' in hist_kwargs.keys() else hist_kwargs['color']
+            interp_type = "linear"
+            interpolator = interp1d(edge_center, n_, kind=interp_type)
+            
+            if len(quantiles) > 0:    
+                lower_q, upper_q = qvalues.min(), qvalues.max()
+            else:
+                lower_q, upper_q = edge_center.min(), edge_center.max()
+                
+            x_tmp = np.linspace(lower_q, upper_q, 1000)
+
+            ax.fill_between(
+                            x_tmp,
+                            np.zeros(x_tmp.shape),
+                            interpolator(x_tmp),
+                            color=fillcolor,
+                            alpha=0.2,
+                        )
+            
+            if (median is not None) and plot_median:
+                ax.axvline(median, ls="solid", color=quantiles_color)
 
             if verbose:
                 print("Quantiles:")

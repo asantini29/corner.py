@@ -48,6 +48,7 @@ def corner_impl(
     truths=None,
     truth_color="#4682b4",
     marginal_type="hist",
+    linestyle='-',
     scale_hist=False,
     quantiles=None,
     quantiles_type = "fill",
@@ -245,7 +246,7 @@ def corner_impl(
         
         if marginal_type == "hist":
             if smooth1d is None:
-                n, edges, _ = ax.hist(x, bins=bins_1d, weights=weights, **hist_kwargs)
+                n, edges, _ = ax.hist(x, bins=bins_1d, weights=weights, linestyle=linestyle, **hist_kwargs)
             else:
                 if gaussian_filter is None:
                     raise ImportError("Please install scipy for smoothing")
@@ -253,7 +254,7 @@ def corner_impl(
                 n = gaussian_filter(n, smooth1d)
                 x0 = np.array(list(zip(bins_1d[:-1], bins_1d[1:]))).flatten()
                 y0 = np.array(list(zip(n, n))).flatten()
-                ax.plot(x0, y0, **hist_kwargs)
+                ax.plot(x0, y0, linestyle=linestyle, **hist_kwargs)
 
             # Plot quantiles if wanted.
             if len(quantiles) > 0:
@@ -293,6 +294,7 @@ def corner_impl(
                 edge_center,
                 weights=n,
                 bins=bins_1d,  # type: ignore
+                linestyle=linestyle,
                 **hist_kwargs,
             )
             
@@ -316,7 +318,7 @@ def corner_impl(
                         )
             
             if (median is not None) and plot_median:
-                ax.axvline(median, ls="solid", color=quantiles_color)
+                ax.axvline(median, ls=linestyle, color=quantiles_color)
 
             if verbose:
                 print("Quantiles:")
@@ -439,6 +441,8 @@ def corner_impl(
             if hasattr(y, "compressed"):
                 y = y.compressed()
 
+            contour_kwargs = dict(linestyle=linestyle)
+
             hist2d(
                 y,
                 x,
@@ -451,6 +455,7 @@ def corner_impl(
                 bins=[bins[j], bins[i]],
                 new_fig=new_fig,
                 force_range=force_range,
+                contour_kwargs=contour_kwargs,
                 **hist2d_kwargs,
             )
 

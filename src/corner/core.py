@@ -48,7 +48,7 @@ def corner_impl(
     truths=None,
     truth_color="#4682b4",
     marginal_type="hist",
-    linestyle='-',
+    linestyle='solid',
     scale_hist=False,
     quantiles=None,
     quantiles_type = "fill",
@@ -244,6 +244,9 @@ def corner_impl(
             else:
                 median = None
         
+        else:
+            median = None
+
         if marginal_type == "hist":
             if smooth1d is None:
                 n, edges, _ = ax.hist(x, bins=bins_1d, weights=weights, linestyle=linestyle, **hist_kwargs)
@@ -268,7 +271,9 @@ def corner_impl(
                     edge_center = 0.5 * (edges[:-1] + edges[1:])
 
                     interp_type = "linear" if smooth1d else "nearest"
-                    interpolator = interp1d(edge_center, n, kind=interp_type)
+                    interpolator = interp1d(np.concatenate((edges[:1], edge_center, edges[-1:])), 
+                                            np.concatenate((n[:1], n, n[-1:])), 
+                                            kind=interp_type)
 
                     lower_q, upper_q = qvalues.min(), qvalues.max()
                     x_tmp = np.linspace(lower_q, upper_q, 1000)
@@ -441,7 +446,7 @@ def corner_impl(
             if hasattr(y, "compressed"):
                 y = y.compressed()
 
-            contour_kwargs = dict(linestyle=linestyle)
+            contour_kwargs = dict(linestyles=linestyle)
 
             hist2d(
                 y,
@@ -529,12 +534,12 @@ def corner_impl(
                     ax.yaxis.set_major_formatter(LogFormatterMathtext())
 
     if truths is not None:
-        overplot_lines(fig, truths, reverse=reverse, color=truth_color)
+        overplot_lines(fig, truths, reverse=reverse, color=truth_color, linewidth=1)
         overplot_points(
             fig,
             [[np.nan if t is None else t for t in truths]],
             reverse=reverse,
-            marker="s",
+            marker="x",
             color=truth_color,
         )
 

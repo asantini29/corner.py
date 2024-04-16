@@ -271,12 +271,25 @@ def corner_impl(
                     edge_center = 0.5 * (edges[:-1] + edges[1:])
 
                     interp_type = "linear" if smooth1d else "nearest"
-                    interpolator = interp1d(np.concatenate((edges[:1], edge_center, edges[-1:])), 
-                                            np.concatenate((n[:1], n, n[-1:])), 
-                                            kind=interp_type)
+                    x_interp = np.concatenate((edges[:1], edge_center, edges[-1:]))
+                    y_interp = np.concatenate((n[:1], n, n[-1:]))
 
                     lower_q, upper_q = qvalues.min(), qvalues.max()
                     x_tmp = np.linspace(lower_q, upper_q, 1000)
+                    
+                    # if lower_q < x_interp[0]:
+                    #     x_interp[0] = lower_q
+                    #     y_interp[0] = 0
+                    
+                    # if upper_q > x_interp[-1]:
+                    #     x_interp[-1] = upper_q
+                    #     y_interp[-1] = 0
+
+                    interpolator = interp1d(x_interp, 
+                                            y_interp, 
+                                            kind=interp_type,
+                                            fill_value=0 #'extrapolate'
+                                            )
 
                     ax.fill_between(
                                     x_tmp,
